@@ -24,7 +24,8 @@ with st.sidebar:
     menu = st.radio("Pilih Topik:", 
         ["Beranda", "Akar Persamaan", "Integrasi Numerik", "Sistem Persamaan Linear"])
     
-    st.info("Dibuat oleh Kelompok XX")
+    st.info("Dibuat oleh Kenneth-c14230054 " \
+    "dan Jose-c14230055")
 
 # ==========================================
 # 1. HALAMAN BERANDA
@@ -176,9 +177,6 @@ elif menu == "Integrasi Numerik":
             st.error(hasil)
 # ==========================================
 # 4. HALAMAN SISTEM PERSAMAAN LINEAR
-# ==========================================
-# ==========================================
-# 4. HALAMAN SISTEM PERSAMAAN LINEAR (UPDATE)
 # ==========================================
 elif menu == "Sistem Persamaan Linear":
     st.header("🧮 Penyelesaian SPL (Matriks)")
