@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import sympy as sp # Perlu import ini untuk menampilkan rumus cantik di UI
 
 # Import modul buatan sendiri dari folder 'modules'
 from modules import akar, integrasi, spl
@@ -42,7 +43,7 @@ if menu == "Beranda":
     """)
 
 # ==========================================
-# 2. HALAMAN AKAR PERSAMAAN
+# 2. HALAMAN AKAR PERSAMAAN (SUDAH DIUPDATE)
 # ==========================================
 elif menu == "Akar Persamaan":
     st.header("🔍 Pencarian Akar Persamaan")
@@ -51,11 +52,23 @@ elif menu == "Akar Persamaan":
     metode = st.selectbox("Pilih Metode", 
         ["Bisection", "Regula Falsi", "Newton-Raphson", "Secant"])
     
-    # Info Fungsi
-    st.info("Fungsi yang digunakan (Hardcoded):")
-    st.latex(r"f(x) = x^3 - 2x - 5")
+    # --- FITUR BARU: INPUT FUNGSI DINAMIS ---
+    st.markdown("### Masukkan Fungsi f(x)")
+    st.info("Gunakan sintaks Python. Contoh: `x**3 - 2*x - 5` atau `exp(x) - 5*x`")
+    
+    # 1. Kolom Input Teks
+    func_input = st.text_input("Fungsi f(x):", value="x**3 - 2*x - 5")
+    
+    # 2. Menampilkan Preview Rumus Matematika (LaTeX)
+    try:
+        # Mengubah string input menjadi format LaTeX agar terlihat cantik
+        st.latex("f(x) = " + sp.latex(sp.sympify(func_input)))
+    except:
+        st.error("Format fungsi belum benar atau kosong.")
 
-    # Layout Input
+    st.markdown("---")
+
+    # Layout Input Parameter
     col1, col2 = st.columns(2)
     
     with col1:
@@ -80,14 +93,15 @@ elif menu == "Akar Persamaan":
         hasil = None
         
         # Panggil Fungsi dari Module 'akar'
+        # PERHATIKAN: Sekarang kita mengirimkan variable 'func_input' ke modul!
         if metode == "Bisection":
-            df_res, hasil = akar.bisection(a, b, tol, max_iter)
+            df_res, hasil = akar.bisection(func_input, a, b, tol, max_iter)
         elif metode == "Regula Falsi":
-            df_res, hasil = akar.regula_falsi(a, b, tol, max_iter)
+            df_res, hasil = akar.regula_falsi(func_input, a, b, tol, max_iter)
         elif metode == "Newton-Raphson":
-            df_res, hasil = akar.newton_raphson(x0, tol, max_iter)
+            df_res, hasil = akar.newton_raphson(func_input, x0, tol, max_iter)
         elif metode == "Secant":
-            df_res, hasil = akar.secant(x0, x1, tol, max_iter)
+            df_res, hasil = akar.secant(func_input, x0, x1, tol, max_iter)
 
         # Tampilkan Hasil
         if df_res is not None:
@@ -99,11 +113,12 @@ elif menu == "Akar Persamaan":
                 # Plot Grafik Error (Opsional - Bonus Visual)
                 if "Error" in df_res.columns:
                     # Bersihkan data error yang "-" agar bisa di-plot
-                    chart_data = df_res[df_res["Error"] != "-"]
+                    # Kita filter baris di mana kolom Error bisa diubah jadi angka
+                    chart_data = df_res[pd.to_numeric(df_res["Error"], errors='coerce').notnull()]
                     chart_data["Error"] = pd.to_numeric(chart_data["Error"])
                     st.line_chart(chart_data, x="Iterasi", y="Error")
         else:
-            st.error(hasil) # Tampilkan pesan error jika ada
+            st.error(hasil) # Tampilkan pesan error jika ada (misal turunan 0)
 
 # ==========================================
 # 3. HALAMAN INTEGRASI NUMERIK
@@ -137,7 +152,7 @@ elif menu == "Integrasi Numerik":
             st.success(f"✅ Hasil Integrasi: **{hasil:.8f}**")
             st.dataframe(df_res, use_container_width=True)
         else:
-            st.error(hasil) # Error message (misal n ganjil di simpson 1/3)
+            st.error(hasil) 
 
 # ==========================================
 # 4. HALAMAN SISTEM PERSAMAAN LINEAR
@@ -205,6 +220,6 @@ elif menu == "Sistem Persamaan Linear":
                 
                 # Grafik Konvergensi Error
                 if "Error Max" in df_res.columns:
-                     st.line_chart(df_res, x="Iterasi", y="Error Max")
+                      st.line_chart(df_res, x="Iterasi", y="Error Max")
         else:
             st.error(hasil)
