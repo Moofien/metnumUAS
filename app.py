@@ -123,37 +123,60 @@ elif menu == "Akar Persamaan":
 # ==========================================
 # 3. HALAMAN INTEGRASI NUMERIK
 # ==========================================
+# ==========================================
+# 3. HALAMAN INTEGRASI NUMERIK (TAMPILAN DIPERBAIKI)
+# ==========================================
 elif menu == "Integrasi Numerik":
     st.header("∫ Integrasi Numerik")
     
     metode = st.selectbox("Pilih Metode", 
         ["Trapesium", "Simpson 1/3", "Simpson 3/8"])
     
-    st.info("Fungsi yang diintegralkan:")
-    st.latex(r"f(x) = e^x")
+    st.markdown("### Masukkan Fungsi f(x)")
+    st.info("Contoh: `exp(x)`, `x**2 + 2*x`, `sin(x)`")
     
+    # Input Text
+    func_input = st.text_input("Fungsi f(x):", value="x**2", key="integral_input")
+    
+    try:
+        st.latex(r"\int (" + sp.latex(sp.sympify(func_input)) + ") dx")
+    except:
+        st.error("Format fungsi salah.")
+
+    st.markdown("---")
+    
+    # Input Parameter
     c1, c2, c3 = st.columns(3)
     with c1: a = st.number_input("Batas Bawah (a)", value=0.0)
-    with c2: b = st.number_input("Batas Atas (b)", value=1.0)
+    with c2: b = st.number_input("Batas Atas (b)", value=2.0)
     with c3: n = st.number_input("Jumlah Segmen (n)", value=4, step=1)
     
     if st.button("Hitung Integral"):
         df_res = None
         hasil = None
+        steps = "" 
         
+        # Panggil fungsi module
         if metode == "Trapesium":
-            df_res, hasil = integrasi.metode_trapesium(a, b, n)
+            df_res, hasil, steps = integrasi.metode_trapesium(func_input, a, b, n)
         elif metode == "Simpson 1/3":
-            df_res, hasil = integrasi.metode_simpson_1_3(a, b, n)
+            df_res, hasil, steps = integrasi.metode_simpson_1_3(func_input, a, b, n)
         elif metode == "Simpson 3/8":
-            df_res, hasil = integrasi.metode_simpson_3_8(a, b, n)
+            df_res, hasil, steps = integrasi.metode_simpson_3_8(func_input, a, b, n)
             
         if df_res is not None:
             st.success(f"✅ Hasil Integrasi: **{hasil:.8f}**")
+            
+            # --- PERBAIKAN TAMPILAN LANGKAH DI SINI ---
+            with st.expander("📝 Lihat Langkah Perhitungan Manual", expanded=True):
+                # st.text menampilkan tulisan apa adanya (termasuk enter/spasi)
+                # sehingga terlihat rapi ke bawah.
+                st.text(steps) 
+            
+            st.write("### Tabel Sub-Interval")
             st.dataframe(df_res, use_container_width=True)
         else:
-            st.error(hasil) 
-
+            st.error(hasil)
 # ==========================================
 # 4. HALAMAN SISTEM PERSAMAAN LINEAR
 # ==========================================
