@@ -123,9 +123,6 @@ elif menu == "Akar Persamaan":
 # ==========================================
 # 3. HALAMAN INTEGRASI NUMERIK
 # ==========================================
-# ==========================================
-# 3. HALAMAN INTEGRASI NUMERIK (TAMPILAN DIPERBAIKI)
-# ==========================================
 elif menu == "Integrasi Numerik":
     st.header("∫ Integrasi Numerik")
     
@@ -180,11 +177,14 @@ elif menu == "Integrasi Numerik":
 # ==========================================
 # 4. HALAMAN SISTEM PERSAMAAN LINEAR
 # ==========================================
+# ==========================================
+# 4. HALAMAN SISTEM PERSAMAAN LINEAR (UPDATE)
+# ==========================================
 elif menu == "Sistem Persamaan Linear":
     st.header("🧮 Penyelesaian SPL (Matriks)")
     
     metode = st.selectbox("Pilih Metode", 
-        ["Eliminasi Gauss (Direct)", "Gauss-Seidel (Iteratif)", "Jacobi (Iteratif)"])
+        ["Eliminasi Gauss (Direct)", "Gauss-Jordan (Direct)", "Gauss-Seidel (Iteratif)", "Jacobi (Iteratif)"])
     
     # Input Ukuran Matriks
     n_var = st.number_input("Jumlah Variabel (n)", min_value=2, max_value=10, value=3)
@@ -192,13 +192,12 @@ elif menu == "Sistem Persamaan Linear":
     st.write("### Masukkan Koefisien Matriks A dan Vektor b")
     st.caption("Format: A11 A12 ... | b1")
     
-    # Input Grid Dinamis untuk Matriks
+    # Input Grid Dinamis
     matrix_A = []
     vector_b = []
     
-    # Membuat Grid Input
     for i in range(n_var):
-        cols = st.columns(n_var + 1) # +1 untuk vektor b
+        cols = st.columns(n_var + 1)
         row_vals = []
         for j in range(n_var):
             with cols[j]:
@@ -206,11 +205,11 @@ elif menu == "Sistem Persamaan Linear":
                 row_vals.append(val)
         matrix_A.append(row_vals)
         
-        with cols[n_var]: # Kolom terakhir untuk b
+        with cols[n_var]:
             val_b = st.number_input(f"b[{i+1}]", key=f"b_{i}", value=0.0)
             vector_b.append(val_b)
             
-    # Input Tambahan untuk Metode Iteratif
+    # Input Tambahan (Hanya untuk Iteratif)
     tol, max_iter = 0.0001, 20
     if "Iteratif" in metode:
         c1, c2 = st.columns(2)
@@ -220,29 +219,36 @@ elif menu == "Sistem Persamaan Linear":
     if st.button("Selesaikan SPL"):
         df_res = None
         hasil = None
+        steps = ""
         
+        # Panggil Fungsi (Sekarang semua return 3 values)
         if "Eliminasi Gauss" in metode:
-            df_res, hasil = spl.gauss_elimination(n_var, matrix_A, vector_b)
+            df_res, hasil, steps = spl.gauss_elimination(n_var, matrix_A, vector_b)
+        elif "Gauss-Jordan" in metode:
+            df_res, hasil, steps = spl.gauss_jordan(n_var, matrix_A, vector_b)
         elif "Gauss-Seidel" in metode:
-            df_res, hasil = spl.gauss_seidel(n_var, matrix_A, vector_b, tol, max_iter)
+            df_res, hasil, steps = spl.gauss_seidel(n_var, matrix_A, vector_b, tol, max_iter)
         elif "Jacobi" in metode:
-            df_res, hasil = spl.jacobi(n_var, matrix_A, vector_b, tol, max_iter)
+            df_res, hasil, steps = spl.jacobi(n_var, matrix_A, vector_b, tol, max_iter)
             
         if df_res is not None:
             st.success("✅ Solusi Ditemukan!")
             
-            # Tampilkan Hasil Akhir (Vector x)
-            st.write("Nilai Variabel:")
+            # 1. Tampilkan Langkah (Khusus Gauss & Jordan)
+            if steps != "":
+                with st.expander("📝 Lihat Langkah Operasi Matriks (OBE)", expanded=True):
+                    st.text(steps)
+            
+            # 2. Tampilkan Hasil Akhir (Semua Metode)
+            st.write("### Nilai Variabel Akhir:")
             result_dict = {f"x{i+1}": [val] for i, val in enumerate(hasil)}
             st.dataframe(pd.DataFrame(result_dict), hide_index=True)
             
-            # Tampilkan Tabel Iterasi (Jika ada)
+            # 3. Tampilkan Tabel Iterasi (Khusus Jacobi & Seidel)
             if "Iteratif" in metode:
-                st.write("Riwayat Iterasi:")
+                st.write("### Riwayat Iterasi:")
                 st.dataframe(df_res, use_container_width=True)
-                
-                # Grafik Konvergensi Error
                 if "Error Max" in df_res.columns:
                       st.line_chart(df_res, x="Iterasi", y="Error Max")
         else:
-            st.error(hasil)
+            st.error(hasil) # Tampilkan pesan error
