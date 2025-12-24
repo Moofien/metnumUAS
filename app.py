@@ -226,7 +226,6 @@ elif menu == "Sistem Persamaan Linear":
         elif "Gauss-Jordan" in metode:
             df_res, hasil, steps = spl.gauss_jordan(n_var, matrix_A, vector_b)
         elif "LU Decomposition" in metode: # <--- INI BAGIAN YANG DIUPDATE
-            # Memanggil fungsi ASLI, bukan dummy lagi
             df_res, hasil, steps = spl.lu_decomposition(n_var, matrix_A, vector_b)
         elif "Gauss-Seidel" in metode:
             df_res, hasil, steps = spl.gauss_seidel(n_var, matrix_A, vector_b, tol, max_iter)
