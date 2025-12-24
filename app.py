@@ -38,7 +38,7 @@ if menu == "Beranda":
     **Fitur yang tersedia:**
     1. **Akar Persamaan**: Bisection, Regula Falsi, Newton-Raphson, Secant.
     2. **Integrasi Numerik**: Trapesium, Simpson 1/3, Simpson 3/8.
-    3. **SPL**: Eliminasi Gauss, Gauss-Seidel, Jacobi.
+    3. **SPL**: Eliminasi Gauss, Gauss-Jordan, LU Decom, Gauss-Seidel, Jacobi.
     
     Silakan pilih menu di sebelah kiri untuk memulai perhitungan.
     """)
@@ -181,8 +181,9 @@ elif menu == "Integrasi Numerik":
 elif menu == "Sistem Persamaan Linear":
     st.header("🧮 Penyelesaian SPL (Matriks)")
     
+    # UPDATE: Menambahkan "LU Decomposition" ke dalam list
     metode = st.selectbox("Pilih Metode", 
-        ["Eliminasi Gauss (Direct)", "Gauss-Jordan (Direct)", "Gauss-Seidel (Iteratif)", "Jacobi (Iteratif)"])
+        ["Eliminasi Gauss (Direct)", "Gauss-Jordan (Direct)", "LU Decomposition (Direct)", "Gauss-Seidel (Iteratif)", "Jacobi (Iteratif)"])
     
     # Input Ukuran Matriks
     n_var = st.number_input("Jumlah Variabel (n)", min_value=2, max_value=10, value=3)
@@ -219,34 +220,37 @@ elif menu == "Sistem Persamaan Linear":
         hasil = None
         steps = ""
         
-        # Panggil Fungsi (Sekarang semua return 3 values)
+        # Logika Pemilihan Metode
         if "Eliminasi Gauss" in metode:
             df_res, hasil, steps = spl.gauss_elimination(n_var, matrix_A, vector_b)
         elif "Gauss-Jordan" in metode:
             df_res, hasil, steps = spl.gauss_jordan(n_var, matrix_A, vector_b)
+        elif "LU Decomposition" in metode: # <--- INI BAGIAN YANG DIUPDATE
+            # Memanggil fungsi ASLI, bukan dummy lagi
+            df_res, hasil, steps = spl.lu_decomposition(n_var, matrix_A, vector_b)
         elif "Gauss-Seidel" in metode:
             df_res, hasil, steps = spl.gauss_seidel(n_var, matrix_A, vector_b, tol, max_iter)
         elif "Jacobi" in metode:
             df_res, hasil, steps = spl.jacobi(n_var, matrix_A, vector_b, tol, max_iter)
             
+        # Menampilkan Hasil (Hanya jika df_res TIDAK None)
         if df_res is not None:
             st.success("✅ Solusi Ditemukan!")
             
-            # 1. Tampilkan Langkah (Khusus Gauss & Jordan)
             if steps != "":
                 with st.expander("📝 Lihat Langkah Operasi Matriks (OBE)", expanded=True):
                     st.text(steps)
             
-            # 2. Tampilkan Hasil Akhir (Semua Metode)
             st.write("### Nilai Variabel Akhir:")
             result_dict = {f"x{i+1}": [val] for i, val in enumerate(hasil)}
             st.dataframe(pd.DataFrame(result_dict), hide_index=True)
             
-            # 3. Tampilkan Tabel Iterasi (Khusus Jacobi & Seidel)
             if "Iteratif" in metode:
                 st.write("### Riwayat Iterasi:")
                 st.dataframe(df_res, use_container_width=True)
                 if "Error Max" in df_res.columns:
                       st.line_chart(df_res, x="Iterasi", y="Error Max")
-        else:
-            st.error(hasil) # Tampilkan pesan error
+        
+        # Jika LU dipilih (hasil None), bagian ini tidak akan error, hanya muncul warning di atas.
+        elif "LU Decomposition" not in metode: 
+            st.error(hasil)
